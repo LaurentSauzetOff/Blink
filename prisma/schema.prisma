@@ -1,0 +1,103 @@
+// prisma/schema.prisma
+
+// Change this:
+// datasource db {
+//   provider = "mysql"
+//   url      = env("DATABASE_URL")
+// }
+
+// To this:
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id String @id @default(uuid())
+  userId String @unique
+  name String
+  imageUrl String @db.Text
+  email String @db.Text
+
+  servers Server[]
+  members Member[]
+  channels Channel[]
+
+  CreatedAt DateTime @default(now())
+  UpdatedAt DateTime @UpdatedAt
+}
+
+model Server {
+  id String @id @default(uuid())
+  name StringimageUrl String @db.Text
+  imageUrl String @db.Text
+  inviteCode String @db.Text
+
+  CreatedAt DateTime @default(now())
+  UpdatedAt DateTime @UpdatedAt
+
+  profileId String
+  profile Profile @relation(fields: [profileId], reference: [id], onDelete: Cascade)
+
+  members Member[]
+  channels Channel[]
+
+  @@index([profileId])
+}
+
+enum MemberRole {
+  ADMIN 
+  MODERATOR
+  GUEST
+}
+
+model Member {
+ id String @id @default(uuid())
+ role MemberRole @default(GUEST)
+
+  profileId String
+  profile Profile @relation(fields: [profileId], reference: [id], onDelete: Cascade)
+
+  serverId String
+  server Server @relation(fields: [serverId], reference: [id], onDelete: Cascade)
+
+   CreatedAt DateTime @default(now())
+  UpdatedAt DateTime @UpdatedAt
+
+   @@index([profileId])
+   @@index([serverId])
+}
+
+enum ChannelType {
+  TEXT 
+  AUDIO 
+  VIDEO
+}
+
+model Channel {
+  id String @id @default(uuid())
+  name String
+  type ChannelType @default(TEXT)
+
+
+  profileId String
+  profile Profile @relation(fields: [profileId], reference: [id], onDelete: Cascade)
+
+  serverId String
+  server Server @relation(fields: [serverId], reference: [id], onDelete: Cascade)
+
+    CreatedAt DateTime @default(now())
+  UpdatedAt DateTime @UpdatedAt
+  
+  @@index([serverId])
+  @@index([profileId])
+}
+
+
+
+
+
+
+
+
+
