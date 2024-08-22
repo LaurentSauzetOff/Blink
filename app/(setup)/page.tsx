@@ -1,26 +1,16 @@
-import { db } from "@/lib/db";
-import { initialProfile } from "@/lib/initial-profile";
-import { redirect } from "next/navigation";
-import {InitialModal} from "@/components/modals/initial-modal";
+import { InitialModal } from '@/components/modals/initial-modal';
+import { getOrCreateUserProfile } from '@/lib/profiles/actions';
+import { getFirstServerByProfileId } from '@/lib/servers/actions';
+import { redirect } from 'next/navigation';
 
-const SetupPage = async () => {
-    const profile = await initialProfile();
+export default async function SetupPage() {
+  const profile = await getOrCreateUserProfile();
 
-    const server = await db.server.findFirst({
-        where: {
-            members: {
-                some: {
-                    profileId: profile.id
-                }
-            }
-        }
-    });
+  const server = await getFirstServerByProfileId(profile.id);
 
-    if (server) {
-        return redirect(`/servers/${server.id}`);
-    }
+  if (server) {
+    return redirect(`/servers/${server.id}`);
+  }
 
-    return <InitialModal />;
+  return <InitialModal />;
 }
-
-export default SetupPage;
