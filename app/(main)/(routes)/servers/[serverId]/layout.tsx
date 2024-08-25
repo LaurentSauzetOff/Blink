@@ -1,28 +1,44 @@
-import { ServerSidebar } from '@/components/server/server-sidebar';
-import { useCurrentProfile } from '@/hooks/use-current-profile';
-import { findServer } from '@/lib/servers/actions';
-import { redirect } from 'next/navigation';
-import { ReactNode } from 'react';
+import ChannelSidebar from "@/components/server/channel-sidebar";
+import { currentProf } from "@/lib/current-profile";
+import { db } from "@/lib/db";
+import { redirectToSignIn } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
-interface Props {
-  children: ReactNode;
+const ServerIdLayout = async ({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
   params: { serverId: string };
-}
+}) => {
+  const profile = await currentProf();
 
-export default async function ServerIdLayout({ children, params }: Props) {
-  const profile = await useCurrentProfile();
-
-  const server = await findServer(params.serverId, profile.id);
-  if (!server) {
-    return redirect('/');
+  if (!profile) {
+    return redirectToSignIn();
   }
 
+  const server = await db.server.findUnique({
+    where: {
+      id: params.serverId,
+      members: {
+        some: {
+          profileId: profile.id,
+        },
+      },
+    },
+  });
+
+  if (!server) {
+    return redirect("/");
+  }
   return (
-    <div className="h-full">
+    <div className="h-full ">
       <div className="hidden md:flex h-full w-60 z-20 flex-col fixed inset-y-0">
-        <ServerSidebar serverId={server.id} />
+        <ChannelSidebar serverId={params.serverId}></ChannelSidebar>
       </div>
       <main className="h-full md:pl-60">{children}</main>
     </div>
   );
-}
+};
+
+export default ServerIdLayout;

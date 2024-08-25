@@ -1,47 +1,70 @@
-'use client';
+"use client";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { UploadFile } from "../upload-file";
+import axios from "axios";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import axios from 'axios';
-import { FileUpload } from '../file-upload';
-import { Button } from '../ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
-import { Input } from '../ui/input';
-import { ServerForm, serverFormSchema } from '@/lib/servers/validations';
-import { useRouter } from 'next/navigation';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-export function InitialModal() {
-  const [isMounted, setIsMounted] = useState(false);
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormDescription,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+export const InitialModal = () => {
+  const [isMounted, setMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    setIsMounted(true);
+    setMounted(true);
   }, []);
 
-  const form = useForm<ServerForm>({
-    resolver: zodResolver(serverFormSchema),
+  const schema = z.object({
+    name: z.string().min(1, {
+      message: "Name is required",
+    }),
+    imageUrl: z.string().min(1, {
+      message: "Image is required",
+    }),
+  });
+
+  const form = useForm({
+    resolver: zodResolver(schema),
     defaultValues: {
-      name: '',
-      imageUrl: '',
+      name: "",
+      imageUrl: "",
     },
   });
 
   const isLoading = form.formState.isSubmitting;
-
-  async function onSubmit(values: ServerForm) {
+  const onSubmit = async (values: z.infer<typeof schema>) => {
     try {
-      await axios.post('/api/servers', values);
+      await axios.post("/api/servers", values);
 
       form.reset();
       router.refresh();
       window.location.reload();
     } catch (error) {
-      console.error(error);
+      console.log(error);
     }
-  }
-
+  };
   if (!isMounted) {
     return null;
   }
@@ -50,13 +73,20 @@ export function InitialModal() {
     <Dialog open>
       <DialogContent className="bg-white text-black p-0 overflow-hidden">
         <DialogHeader className="pt-8 px-6">
-          <DialogTitle className="text-2xl text-center font-bold">Customize your server</DialogTitle>
+          <DialogTitle className="text-2xl text-center font-bold">
+            Customize your server
+          </DialogTitle>
           <DialogDescription className="text-center text-zinc-500">
-            Give your server a personality with a name and an image. You can always change it later.
+            Give your server a cute name and an image, You can always change it
+            later.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form
+            suppressHydrationWarning
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-8"
+          >
             <div className="space-y-8 px-6">
               <div className="flex items-center justify-center text-center">
                 <FormField
@@ -65,13 +95,16 @@ export function InitialModal() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <FileUpload endpoint="serverImage" value={field.value} onChange={field.onChange} />
+                        <UploadFile
+                          endpoint="serverImage"
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
                       </FormControl>
                     </FormItem>
                   )}
                 />
               </div>
-
               <FormField
                 control={form.control}
                 name="name"
@@ -89,13 +122,19 @@ export function InitialModal() {
                       />
                     </FormControl>
                     <FormMessage />
+                    <p>
+                      Join this
+                      <a href="http://localhost:3000/invite/01fb727b-7c94-4b2a-a5ee-9ef54da3c303">
+                        server
+                      </a>
+                    </p>
                   </FormItem>
                 )}
               />
             </div>
             <DialogFooter className="bg-gray-100 px-6 py-4">
               <Button variant="primary" disabled={isLoading}>
-                Create
+                Create server
               </Button>
             </DialogFooter>
           </form>
@@ -103,4 +142,4 @@ export function InitialModal() {
       </DialogContent>
     </Dialog>
   );
-}
+};

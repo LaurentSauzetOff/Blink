@@ -1,35 +1,50 @@
 'use client';
-
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FileUpload } from "../file-upload"
 import axios from 'axios';
-import { FileUpload } from '../file-upload';
-import { Button } from '../ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
-import { Input } from '../ui/input';
-import { ServerForm, serverFormSchema } from '@/lib/servers/validations';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { useModal } from '@/hooks/use-modal.store';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
+import { Form, FormControl, FormField, FormDescription, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useModal } from '@/hooks/use-modal-store';
 import { useEffect } from 'react';
 
-export function EditServerModal() {
-  const { isOpen, closeModal, type, data } = useModal();
+export const EditServerModal = () => {
+  const { isOpen, onClose, type, data } = useModal();
+
   const router = useRouter();
 
+  const isModalOpen = isOpen && type === 'editServer';
   const { server } = data;
 
-  const isModalOpen = isOpen && type === 'editServer';
+  const schema = z.object({
+    name: z.string().min(1, {
+      message: 'Name is required',
+    }),
+    imageUrl: z.string().min(1, {
+      message: 'Image is required',
+    }),
+  });
 
-  const form = useForm<ServerForm>({
-    resolver: zodResolver(serverFormSchema),
+  const form = useForm({
+    resolver: zodResolver(schema),
     defaultValues: {
       name: '',
       imageUrl: '',
     },
   });
-
-  const isLoading = form.formState.isSubmitting;
 
   useEffect(() => {
     if (server) {
@@ -38,22 +53,23 @@ export function EditServerModal() {
     }
   }, [server, form]);
 
-  async function onSubmit(values: ServerForm) {
+  const isLoading = form.formState.isSubmitting;
+  const onSubmit = async (values: z.infer<typeof schema>) => {
     try {
       await axios.patch(`/api/servers/${server?.id}`, values);
 
       form.reset();
       router.refresh();
-      closeModal();
+      onClose();
     } catch (error) {
-      console.error(error);
+      console.log(error);
     }
-  }
+  };
 
-  function handleClose() {
+  const handleClose = () => {
     form.reset();
-    closeModal();
-  }
+    onClose();
+  };
 
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
@@ -61,11 +77,11 @@ export function EditServerModal() {
         <DialogHeader className="pt-8 px-6">
           <DialogTitle className="text-2xl text-center font-bold">Customize your server</DialogTitle>
           <DialogDescription className="text-center text-zinc-500">
-            Give your server a personality with a name and an image. You can always change it later.
+            Give your server a cute name and an image, You can always change it later.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form suppressHydrationWarning onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-8 px-6">
               <div className="flex items-center justify-center text-center">
                 <FormField
@@ -74,17 +90,12 @@ export function EditServerModal() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <FileUpload
-                          endpoint="serverImage"
-                          value={field.value}
-                          onChange={field.onChange}
-                        />
+                        <FileUpload endpoint="serverImage" value={field.value} onChange={field.onChange} />
                       </FormControl>
                     </FormItem>
                   )}
                 />
               </div>
-
               <FormField
                 control={form.control}
                 name="name"
@@ -98,7 +109,7 @@ export function EditServerModal() {
                         disabled={isLoading}
                         className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
                         placeholder="Enter server name"
-                        {...field} // Transmet toutes les props nécessaires à Input
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -116,4 +127,4 @@ export function EditServerModal() {
       </DialogContent>
     </Dialog>
   );
-}
+};

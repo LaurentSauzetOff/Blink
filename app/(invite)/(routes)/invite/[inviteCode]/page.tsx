@@ -1,22 +1,25 @@
-import { useCurrentProfile } from '@/hooks/use-current-profile';
-import prisma from '@/lib/prisma';
-import { redirect } from 'next/navigation';
+import { currentProf } from "@/lib/current-profile";
+import { db } from "@/lib/db";
+import { redirectToSignIn } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
-interface Props {
+interface InviteCodeProps {
   params: {
     inviteCode: string;
   };
 }
 
-export default async function InviteCodePage({ params }: Props) {
-  const profile = await useCurrentProfile();
+const InviteCode = async ({ params }: InviteCodeProps) => {
+  const profile = await currentProf();
 
-  if (!params.inviteCode) {
-    return redirect('/');
+  if (!profile) {
+    return redirectToSignIn();
   }
 
-  // TODO: Move outside the component
-  const existingServer = await prisma.server.findFirst({
+  if (!params.inviteCode) {
+    return redirect("/");
+  }
+  const existingServer = await db.server.findFirst({
     where: {
       inviteCode: params.inviteCode,
       members: {
@@ -30,25 +33,21 @@ export default async function InviteCodePage({ params }: Props) {
   if (existingServer) {
     return redirect(`/servers/${existingServer.id}`);
   }
-
-  const server = await prisma.server.update({
+  const server = await db.server.update({
     where: {
       inviteCode: params.inviteCode,
     },
     data: {
       members: {
-        create: [
-          {
-            profileId: profile.id,
-          },
-        ],
+        create: [{ profileId: profile.id }],
       },
     },
   });
-
   if (server) {
-    return redirect(`/servers/${server.id}`);
+    return redirect("/servers/" + server.id);
   }
 
   return null;
-}
+};
+
+export default InviteCode;

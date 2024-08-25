@@ -1,25 +1,31 @@
-import { v4 as uuidv4 } from 'uuid';
-import prisma from '@/lib/prisma';
-import { getCurrentProfile } from '@/lib/profiles/actions';
-import { NextRequest, NextResponse } from 'next/server';
+import { currentProf } from "@/lib/current-profile";
+import { db } from "@/lib/db";
+import { NextResponse } from "next/server";
+import { v4 as uuidv4 } from "uuid";
 
-interface Params {
-  serverId: string;
-}
-
-export async function PATCH(req: NextRequest, { params }: { params: Params }) {
+export async function PATCH(
+  req: Request,
+  { params }: { params: { serverId: string } }
+) {
   try {
-    const profile = await getCurrentProfile();
+    const profile = await currentProf();
 
+    // Vérifie si le profil est authentifié
     if (!profile) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return new NextResponse("Unauthorized: Profile not found", {
+        status: 401,
+      });
     }
 
+    // Vérifie si l'ID du serveur est présent
     if (!params.serverId) {
-      return new NextResponse('Bad Request', { status: 400 });
+      return new NextResponse("Bad Request: Server ID missing", {
+        status: 400,
+      });
     }
 
-    const server = await prisma.server.update({
+    // Met à jour le code d'invitation du serveur
+    const updatedServer = await db.server.update({
       where: {
         id: params.serverId,
         profileId: profile.id,
@@ -29,9 +35,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Params }) {
       },
     });
 
-    return NextResponse.json(server);
+    // Retourne le serveur mis à jour
+    return NextResponse.json({
+      message: "Invite code updated successfully",
+      server: updatedServer,
+    });
   } catch (error) {
-    console.log('[SERVER_ID]', error);
-    return new NextResponse('Internal Error', { status: 500 });
+    console.error("[SERVERS_PATCH]", error);
+    return new NextResponse("Internal error: Could not update invite code", {
+      status: 500,
+    });
   }
 }

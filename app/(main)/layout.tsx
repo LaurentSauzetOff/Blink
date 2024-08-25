@@ -1,17 +1,14 @@
-import { NavigationSidebar } from '@/components/navigation/navigation-sidebar';
-import { ReactNode } from 'react';
+import { NavSidebar } from "@/components/navigation/nav-sidebar";
 
-interface Props {
-  children: ReactNode;
-}
-
-export default function MainLayout({ children }: Props) {
+const MainLayout = async ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="h-full">
       <div className="hidden md:flex h-full w-[72px] z-30 flex-col fixed inset-y-0">
-        <NavigationSidebar />
+        <NavSidebar />
       </div>
       <main className="md:pl-[72px] h-full">{children}</main>
     </div>
   );
-}
+};
+
+export default MainLayout;

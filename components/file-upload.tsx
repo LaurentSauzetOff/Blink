@@ -1,46 +1,66 @@
 'use client';
 
 import { UploadDropzone } from '@/lib/uploadthing';
-import '@uploadthing/react/styles.css';
-import { X } from 'lucide-react';
+import { FileIcon, X } from 'lucide-react';
 import Image from 'next/image';
+import '@uploadthing/react/styles.css';
 
-interface Props {
-  endpoint: 'messageFile' | 'serverImage';
-  value?: string; // Le champ `value` peut être optionnel
+interface UploadFileProps {
   onChange: (url?: string) => void;
+  value: string;
+  endpoint: 'messageFile' | 'serverImage';
 }
 
-export function FileUpload({ endpoint, value, onChange }: Props) {
-  // Affiche un aperçu de l'image si `value` est défini et correspond à une URL d'image
+export const UploadFile = ({ onChange, value, endpoint }: UploadFileProps) => {
   const fileType = value?.split('.').pop();
-  
+
+  if (value && fileType !== 'pdf') {
+    return (
+      <div className="relative h-20 w-20">
+        <Image fill src={value} alt="upload" className="rounded-full object-cover" />
+        <button
+          onClick={() => onChange('')}
+          className="bg-rose-500 text-white p-1 rounded-full absolute top-0 right-0 shadow-sm"
+          type="button"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+
+  if (value && fileType === 'pdf') {
+    return (
+      <div className="relative flex items-center mt-2 p-2 rounded-md bg-background/10">
+        <FileIcon className="h-10 w-10 fill-indigo-200 stroke-indigo-400" />
+        <a
+          href={value}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="ml-2 text-sm text-indigo-500 dark:text-indigo-400 hover:underline"
+        >
+          {value}
+        </a>
+        <button
+          onClick={() => onChange('')}
+          className="bg-rose-500 text-white p-1 rounded-full absolute -top-2 -right-2 shadow-sm"
+          type="button"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      {value && fileType !== 'pdf' ? (
-        <div className="relative h-20 w-20">
-          <Image fill src={value} alt="Upload" className="rounded-full" />
-          <button
-            className="bg-rose-500 text-white p-1 rounded-full absolute top-0 right-0 shadow-sm"
-            type="button"
-            onClick={() => onChange('')} // Appelle `onChange` avec une chaîne vide pour effacer l'image
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ) : (
-        <UploadDropzone
-          endpoint={endpoint}
-          onClientUploadComplete={(res) => {
-            if (res?.[0]?.url) {
-              onChange(res[0].url); // Met à jour l'URL de l'image après le téléchargement
-            }
-          }}
-          onUploadError={(error: Error) => {
-            console.error(error);
-          }}
-        />
-      )}
-    </div>
+    <UploadDropzone
+      endpoint={endpoint}
+      onClientUploadComplete={(res) => {
+        onChange(res?.[0].url);
+      }}
+      onUploadError={(err: Error) => {
+        console.log(err);
+      }}
+    />
   );
-}
+};

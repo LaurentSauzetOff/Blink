@@ -3,17 +3,17 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
-import { FileUpload } from '../file-upload';
+import { UploadFile } from '../file-upload';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Input } from '../ui/input';
 import { ServerForm, serverFormSchema } from '@/lib/servers/validations';
 import { useRouter } from 'next/navigation';
-import { useModal } from '@/hooks/use-modal.store';
+import { useModal } from '@/hooks/use-modal-store';
 
 export function CreateServerModal() {
-  const { isOpen, closeModal, type } = useModal();
+  const { isOpen, onClose, type } = useModal();
   const router = useRouter();
 
   const isModalOpen = isOpen && type === 'createServer';
@@ -34,7 +34,7 @@ export function CreateServerModal() {
 
       form.reset();
       router.refresh();
-      closeModal();
+      onClose();
     } catch (error) {
       console.error(error);
     }
@@ -42,7 +42,7 @@ export function CreateServerModal() {
 
   function handleClose() {
     form.reset();
-    closeModal();
+    onClose();
   }
 
   return (
@@ -64,7 +64,7 @@ export function CreateServerModal() {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <FileUpload endpoint="serverImage" value={field.value} onChange={field.onChange} />
+                        <UploadFile endpoint="serverImage" value={field.value} onChange={field.onChange} />
                       </FormControl>
                     </FormItem>
                   )}
