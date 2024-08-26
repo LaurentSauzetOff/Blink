@@ -7,10 +7,9 @@ import { Loader2, ServerCrash } from "lucide-react";
 
 import { useChatQuery } from "@/hooks/use-chat-query";
 import { useChatSocket } from "@/hooks/use-chat-socket";
-import { useChatScroll } from "@/hooks/use-chat-scroll";
-
 import { ChatWelcome } from "./chat-welcome";
 import { ChatItem } from "./chat-item";
+import { useChatScroll } from "@/hooks/use-chat-scroll";
 
 const DATE_FORMAT = "d MMM yyyy, HH:mm";
 
@@ -57,9 +56,9 @@ export const ChatMessages = ({
       paramKey,
       paramValue,
     });
-  
+
   useChatSocket({ queryKey, addKey, updateKey });
-  
+
   useChatScroll({
     chatRef,
     bottomRef,
@@ -90,9 +89,6 @@ export const ChatMessages = ({
     );
   }
 
-  // Handle cases where data or data.pages might be undefined
-  const pages = data?.pages || [];
-
   return (
     <div ref={chatRef} className="flex-1 flex flex-col py-4 overflow-y-auto">
       {!hasNextPage && <div className="flex-1" />}
@@ -112,9 +108,10 @@ export const ChatMessages = ({
         </div>
       )}
       <div className="flex flex-col-reverse mt-auto">
-        {pages.map((group, i) => (
+        {data?.pages?.map((group, i) => (
           <Fragment key={i}>
-            {group.items?.map((message: MessageWithMemberWithProfile) => (
+            {/* Vérifiez si 'group' et 'group.items' existent avant de les utiliser */}
+            {group && group.items && group.items.map((message: MessageWithMemberWithProfile) => (
               <ChatItem
                 key={message.id}
                 id={message.id}
