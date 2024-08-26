@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FileUpload } from "../file-upload"
+import { UploadFile } from "../file-upload"
 import axios from 'axios';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -90,7 +90,7 @@ export const EditServerModal = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <FileUpload endpoint="serverImage" value={field.value} onChange={field.onChange} />
+                        <UploadFile endpoint="serverImage" value={field.value} onChange={field.onChange} />
                       </FormControl>
                     </FormItem>
                   )}
